@@ -57,7 +57,7 @@ export default function Liquidity({ navigation, GlobalState }) {
                             <TouchableOpacity style={styles.pickupButton} onPress={() => navigation.navigate('Home')}>
                                 <Text style={styles.buttonText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.pickupButton} onPress={() => setModalVisible(!modalVisible)}>
+                            <TouchableOpacity style={styles.pickupButton} onPress={() => navigation.navigate('Home')}>
                                 <Text style={styles.buttonText}>Set Liquidity</Text>
                             </TouchableOpacity>
                         </View>
