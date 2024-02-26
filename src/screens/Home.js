@@ -4,14 +4,19 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { randomBytes, Mnemonic, Wallet } from 'ethers';
+import * as ethers from 'ethers';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home({ navigation, GlobalState }) {
     const { } = GlobalState;
+    const [mnemonic, setMnemonic] = useState('');
+    const [address, setAddress] = useState('');
     const [location, setLocation] = useState(null);
 
-
-    useEffect(() => {
-        (async () => {
+    let onStart = async function(){
+        try{
+            console.log("onStart")
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permission to access location was denied');
@@ -24,7 +29,32 @@ export default function Home({ navigation, GlobalState }) {
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
             });
-        })();
+
+            //
+            let storedMnemonic = await AsyncStorage.getItem('mnemonic');
+            if(storedMnemonic){
+                setMnemonic(storedMnemonic);
+            } else {
+                const randomEntropyBytes = ethers.randomBytes(16); // 128-bit entropy
+                console.log("randomEntropyBytes: ", randomEntropyBytes);
+                // console.log("newMnemonic: ", Mnemonic.fromEntropy(randomEntropyBytes))
+                let newMnemonic = Mnemonic.fromEntropy(randomEntropyBytes);
+                AsyncStorage.setItem('mnemonic', newMnemonic.phrase);
+                storedMnemonic = newMnemonic.phrase
+                setMnemonic(storedMnemonic)
+            }
+            // Create wallet from the mnemonic
+            console.log("ethers: ", ethers);
+            const wallet = Wallet.fromPhrase(storedMnemonic);
+            console.log("Wallet address: ", wallet.address);
+            setAddress(wallet.address);
+        }catch(e){
+            console.error(e)
+        }
+    }
+
+    useEffect(() => {
+        onStart()
     }, []);
 
 /*    useEffect(() => {
