@@ -22,11 +22,13 @@ let PIONEER_WS = 'wss://cash2btc.com'
 let USDT_CONTRACT_POLYGON = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
 const service = "https://polygon.rpc.blxrbdn.com"
 
-export default function Home({ navigation, GlobalState }) {
+export default function Home({ navigation, GlobalState}) {
     const { } = GlobalState;
     const [mnemonic, setMnemonic] = useState('');
     const [address, setAddress] = useState('');
     const [location, setLocation] = useState(null);
+    const [cashDisplay, setCashDisplay] = useState('');
+    const [cryptoDisplay, setCryptoDisplay] = useState('');
 
     let getBalance = async function(){
         try{
@@ -111,6 +113,12 @@ export default function Home({ navigation, GlobalState }) {
             // Convert balanceBN from a BigNumber to a number, considering the decimals
             // const tokenBalance = balanceBN.div(ethers.BigNumber.from(10).pow(decimals)).toNumber();
             console.log("tokenBalance: ", tokenBalance);
+
+            //cash balance
+            let cashBalance = await AsyncStorage.getItem('cash');
+            console.log(cashBalance);
+            setCashDisplay(cashBalance);
+
 
 
             let GLOBAL_SESSION = new Date().getTime()
@@ -253,6 +261,54 @@ export default function Home({ navigation, GlobalState }) {
     const goToLiquidityPage = () => {
         navigation.navigate('Liquidity');
     }
+    const updateBalances = async () => {
+        let storedMnemonic = await AsyncStorage.getItem('mnemonic');
+        const wallet = Wallet.fromPhrase(storedMnemonic);
+        console.log("Wallet address: ", wallet.address);
+        setAddress(wallet.address);
+
+        //get balance
+        // The ABI for the methods we want to interact with
+        const minABI = [
+            // balanceOf
+            {
+                "constant":true,
+                "inputs":[{"name":"_owner","type":"address"}],
+                "name":"balanceOf",
+                "outputs":[{"name":"balance","type":"uint256"}],
+                "type":"function"
+            },
+            // decimals
+            {
+                "constant":true,
+                "inputs":[],
+                "name":"decimals",
+                "outputs":[{"name":"","type":"uint8"}],
+                "type":"function"
+            }
+        ];
+        // Assuming a provider is set up (e.g., ethers.getDefaultProvider or other)
+        const provider = new JsonRpcProvider(service);
+
+        // Create a new instance of a Contract
+        const newContract = new ethers.Contract(USDT_CONTRACT_POLYGON, minABI, provider);
+
+        // Now using ethers to call contract methods
+        const decimals = await newContract.decimals();
+        const balanceBN = await newContract.balanceOf(wallet.address);
+
+        // Since ethers.js returns BigNumber, you need to format it considering the token's decimals
+        // Use the formatUnits utility function to convert the balance to a human-readable format
+        const tokenBalance = formatUnits(balanceBN, decimals);
+
+        // Convert balanceBN from a BigNumber to a number, considering the decimals
+        // const tokenBalance = balanceBN.div(ethers.BigNumber.from(10).pow(decimals)).toNumber();
+        console.log("tokenBalance: ", tokenBalance);
+        setCryptoDisplay(tokenBalance);
+        let cashBalance = await AsyncStorage.getItem('cash');
+        console.log(cashBalance);
+        setCashDisplay(cashBalance);
+    }
 
     return (
         <View style={styles.screen}>
@@ -267,13 +323,19 @@ export default function Home({ navigation, GlobalState }) {
                 <View style={styles.container}>
                     <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
                         <Text style={styles.balanceLabel}>Crypto:</Text>
-                        <Text style={styles.balanceValue}>$1000</Text>
+                        <Text style={styles.balanceValue}>${cryptoDisplay}</Text>
                     </View>
                     <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
                         <Text style={styles.balanceLabel}>Cash:</Text>
-                        <Text style={styles.balanceValue}>$2000</Text>
+                        <Text style={styles.balanceValue}>${cashDisplay}</Text>
                     </View>
                 </View>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => updateBalances()}
+                >
+                    <Text style={styles.buttonText} >Update Balances</Text>
+                </TouchableOpacity>
             </View>
             <View style={styles.body}>
                 <MapView style={styles.map} initialRegion={location}>
