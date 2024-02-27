@@ -29,6 +29,7 @@ export default function Home({ navigation, GlobalState}) {
     const [location, setLocation] = useState(null);
     const [cashDisplay, setCashDisplay] = useState('');
     const [cryptoDisplay, setCryptoDisplay] = useState('');
+    const [currentRate, setCurrentRate] = useState(1);
 
     let getBalance = async function(){
         try{
@@ -146,12 +147,13 @@ export default function Home({ navigation, GlobalState}) {
             console.log("terminalInfo: ", terminalInfo.data);
 
             let rate
-            let TOTAL_CASH = 100
-            let TOTAL_DAI = 100
+            let TOTAL_CASH = Number(cashBalance);
+            let TOTAL_DAI = Number(tokenBalance);
             if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
-                rate = "0"
+                rate = 1;
             } else {
-                rate = (TOTAL_CASH / TOTAL_DAI)
+                rate = (TOTAL_DAI / TOTAL_CASH);
+                setCurrentRate(rate.toFixed(2));
             }
 
             if(!terminalInfo.data){
@@ -309,6 +311,17 @@ export default function Home({ navigation, GlobalState}) {
         let cashBalance = await AsyncStorage.getItem('cash');
         console.log(cashBalance);
         setCashDisplay(cashBalance);
+
+        //set rate
+        let rate
+        let TOTAL_CASH = Number(cashBalance);
+        let TOTAL_DAI = Number(tokenBalance);
+        if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
+            rate = 1;
+        } else {
+            rate = (TOTAL_DAI / TOTAL_CASH);
+            setCurrentRate(rate.toFixed(2));
+        }
     }
 
     return (
@@ -321,6 +334,7 @@ export default function Home({ navigation, GlobalState}) {
                 >
                     <Text style={styles.buttonText} >Set Cash Reserve</Text>
                 </TouchableOpacity>
+                <Text style={styles.rateLabel}>Rate: {currentRate} USDT/USD</Text>
                 <View style={styles.container}>
                     <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
                         <Text style={styles.balanceLabel}>Crypto:</Text>
@@ -358,7 +372,8 @@ const styles = StyleSheet.create({
     body: {
         flex: 8,
         width: '100%',
-        backgroundColor: '#14141410'
+        backgroundColor: '#14141410',
+        alignItems: 'center'
     },
     task: {
         backgroundColor: 'white',
@@ -416,6 +431,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 5,
+    },
+    rateLabel: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 5
     },
     balanceValue: {
         fontSize: 16,
