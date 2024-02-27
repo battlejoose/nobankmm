@@ -91,13 +91,7 @@ export default function Home({ navigation, GlobalState }) {
     return (
         <View style={styles.screen}>
             <Header />
-            <View style={styles.body}>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => goToLiquidityPage()}
-                >
-                    <Text style={styles.buttonText} >Generate Wallet</Text>
-                </TouchableOpacity>
+            <View style={styles.bodyButton}>
                 <TouchableOpacity
                     style={styles.button}
                     onPress={() => goToLiquidityPage()}
@@ -105,9 +99,27 @@ export default function Home({ navigation, GlobalState }) {
                     <Text style={styles.buttonText} >Set Liquidity</Text>
                 </TouchableOpacity>
             </View>
-            <View style={styles.body}>
+            <View style={styles.container}>
+                <View style={styles.balanceContainer}>
+                    <Text style={styles.balanceLabel}>Crypto:</Text>
+                    <Text style={styles.balanceValue}>$1000</Text>
+                </View>
+                <View style={styles.balanceContainer}>
+                    <Text style={styles.balanceLabel}>Cash:</Text>
+                    <Text style={styles.balanceValue}>$2000</Text>
+                </View>
+            </View>
+            <View style={styles.bodyButton}>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => goToLiquidityPage()}
+                >
+                    <Text style={styles.buttonText} >Set Liquidity</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.bodyMap}>
                 <MapView style={styles.map} initialRegion={location}>
-                    {location && <Marker coordinate={location} title="You are here" description="Your location" />}
+                    {location && <Marker coordinate={location} title="Active y/n" description="Rate=x" />}
                 </MapView>
             </View>
             <Footer navigation={navigation} />
@@ -123,7 +135,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     body: {
-        flex: 8,
+        flex: 2,
+        width: '100%',
+        backgroundColor: '#14141410'
+    },
+    bodyButton: {
+        flex: 1,
+        width: '100%',
+        backgroundColor: '#14141410'
+    },
+    bodyMap: {
+        flex: 3,
         width: '100%',
         backgroundColor: '#14141410'
     },
@@ -165,6 +187,24 @@ const styles = StyleSheet.create({
     },
     map: {
         width: '100%',
-        height: '80%',
+        height: '100%',
+    },
+    container: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+    },
+    balanceContainer: {
+        alignItems: 'center',
+    },
+    balanceLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    balanceValue: {
+        fontSize: 16,
+        marginHorizontal:50
     }
 })
