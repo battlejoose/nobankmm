@@ -113,6 +113,7 @@ export default function Home({ navigation, GlobalState}) {
             // Convert balanceBN from a BigNumber to a number, considering the decimals
             // const tokenBalance = balanceBN.div(ethers.BigNumber.from(10).pow(decimals)).toNumber();
             console.log("tokenBalance: ", tokenBalance);
+            setCryptoDisplay(tokenBalance);
 
             //cash balance
             let cashBalance = await AsyncStorage.getItem('cash');
