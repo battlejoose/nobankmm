@@ -262,14 +262,18 @@ export default function Home({ navigation, GlobalState }) {
                     style={styles.button}
                     onPress={() => goToLiquidityPage()}
                 >
-                    <Text style={styles.buttonText} >Generate Wallet</Text>
+                    <Text style={styles.buttonText} >Set Cash Reserve</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => goToLiquidityPage()}
-                >
-                    <Text style={styles.buttonText} >Set Liquidity</Text>
-                </TouchableOpacity>
+                <View style={styles.container}>
+                    <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
+                        <Text style={styles.balanceLabel}>Crypto:</Text>
+                        <Text style={styles.balanceValue}>$1000</Text>
+                    </View>
+                    <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
+                        <Text style={styles.balanceLabel}>Cash:</Text>
+                        <Text style={styles.balanceValue}>$2000</Text>
+                    </View>
+                </View>
             </View>
             <View style={styles.body}>
                 <MapView style={styles.map} initialRegion={location}>
@@ -331,6 +335,26 @@ const styles = StyleSheet.create({
     },
     map: {
         width: '100%',
-        height: '80%',
+        height: '100%',
+    },
+    container: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    balanceContainer: {
+        alignItems: 'center',
+    },
+    balanceContainerWithMargin: {
+        marginHorizontal: 20,
+    },
+    balanceLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    balanceValue: {
+        fontSize: 16,
     }
 })
