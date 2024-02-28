@@ -9,7 +9,7 @@ import * as ethers from 'ethers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Events from "@pioneer-platform/pioneer-events";
 import axios from "axios";
-let QUERY_KEY = 'tester-mm-mobile2'
+let QUERY_KEY = 'tester-mm-mobileJoose'
 const apiClient = axios.create({
     baseURL: spec, // Your base URL
     headers: {
@@ -22,11 +22,15 @@ let PIONEER_WS = 'wss://cash2btc.com'
 let USDT_CONTRACT_POLYGON = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
 const service = "https://polygon.rpc.blxrbdn.com"
 
-export default function Home({ navigation, GlobalState }) {
+export default function Home({ navigation, GlobalState}) {
     const { } = GlobalState;
     const [mnemonic, setMnemonic] = useState('');
     const [address, setAddress] = useState('');
     const [location, setLocation] = useState(null);
+    const [cashDisplay, setCashDisplay] = useState('');
+    const [cryptoDisplay, setCryptoDisplay] = useState('');
+    const [currentRate, setCurrentRate] = useState(1);
+
 
     let getBalance = async function(){
         try{
@@ -111,17 +115,34 @@ export default function Home({ navigation, GlobalState }) {
             // Convert balanceBN from a BigNumber to a number, considering the decimals
             // const tokenBalance = balanceBN.div(ethers.BigNumber.from(10).pow(decimals)).toNumber();
             console.log("tokenBalance: ", tokenBalance);
+            setCryptoDisplay(tokenBalance);
 
+            //cash balance
+            let cashBalance = await AsyncStorage.getItem('cash');
+            console.log("cashBalance: ", cashBalance);
+            setCashDisplay(cashBalance);
+
+            let rate
+            let TOTAL_CASH = Number(cashBalance);
+            let TOTAL_DAI = Number(tokenBalance);
+            if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
+                rate = 1;
+            } else {
+                rate = (TOTAL_DAI / TOTAL_CASH);
+                setCurrentRate(rate.toFixed(2));
+            }
+            console.log("rate: ", rate);
 
             let GLOBAL_SESSION = new Date().getTime()
             //@SEAN MAKE THIS ADJUSTABLE
-            let TERMINAL_NAME = "local-app-nobankmm"
+            let TERMINAL_NAME = "local-app-nobankmmJoose"
             let config = {
                 queryKey:QUERY_KEY,
                 username:TERMINAL_NAME,
                 wss:PIONEER_WS
             }
 
+            //get server info
             const statusLocal = await axios.get(
                 spec+ "/bankless/info"
             );
@@ -133,32 +154,23 @@ export default function Home({ navigation, GlobalState }) {
             clientEvents.setUsername(config.username)
 
             //get terminal info
-            let terminalInfo = await apiClient.get(spec+ "/bankless/terminal/"+TERMINAL_NAME);
+            let terminalInfo = await apiClient.get(spec+ "/bankless/terminal/private/"+TERMINAL_NAME);
             console.log("terminalInfo: ", terminalInfo.data);
-
-            let rate
-            let TOTAL_CASH = 100
-            let TOTAL_DAI = 100
-            if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
-                rate = "0"
-            } else {
-                rate = (TOTAL_CASH / TOTAL_DAI)
-            }
 
             if(!terminalInfo.data){
                 //register
                 let terminal = {
                     terminalId:TERMINAL_NAME+":"+wallet.address,
                     terminalName:TERMINAL_NAME,
-                    tradePair: "USD_DAI",
-                    rate,
+                    tradePair: "USDT_USD",
+                    rate: rate,
                     captable:[],
                     sessionId: GLOBAL_SESSION,
                     TOTAL_CASH:TOTAL_CASH.toString(),
                     TOTAL_DAI:TOTAL_DAI.toString(),
                     pubkey:wallet.address,
                     fact:"",
-                    location:[ 4.5981, -74.0758 ] //@SEAN get real location
+                    location:[location.coords.latitude, location.coords.longitude] //@SEAN get real location
                 }
                 //clear session
                 console.log("REGISTERING TERMINAL: ",terminal)
@@ -177,7 +189,7 @@ export default function Home({ navigation, GlobalState }) {
                     TOTAL_CASH:TOTAL_CASH.toString(),
                     TOTAL_DAI:TOTAL_DAI.toString(),
                     captable:[],
-                    location:[ 4.5981, -74.0758 ]
+                    location:[location.coords.latitude, location.coords.longitude]
                 }
                 let respRegister = await apiClient.post(
                     spec+"/bankless/terminal/update",
@@ -253,6 +265,66 @@ export default function Home({ navigation, GlobalState }) {
     const goToLiquidityPage = () => {
         navigation.navigate('Liquidity');
     }
+    const updateBalances = async () => {
+        let storedMnemonic = await AsyncStorage.getItem('mnemonic');
+        const wallet = Wallet.fromPhrase(storedMnemonic);
+        console.log("Wallet address: ", wallet.address);
+        setAddress(wallet.address);
+
+        //get balance
+        // The ABI for the methods we want to interact with
+        const minABI = [
+            // balanceOf
+            {
+                "constant":true,
+                "inputs":[{"name":"_owner","type":"address"}],
+                "name":"balanceOf",
+                "outputs":[{"name":"balance","type":"uint256"}],
+                "type":"function"
+            },
+            // decimals
+            {
+                "constant":true,
+                "inputs":[],
+                "name":"decimals",
+                "outputs":[{"name":"","type":"uint8"}],
+                "type":"function"
+            }
+        ];
+        // Assuming a provider is set up (e.g., ethers.getDefaultProvider or other)
+        const provider = new JsonRpcProvider(service);
+
+        // Create a new instance of a Contract
+        const newContract = new ethers.Contract(USDT_CONTRACT_POLYGON, minABI, provider);
+
+        // Now using ethers to call contract methods
+        const decimals = await newContract.decimals();
+        const balanceBN = await newContract.balanceOf(wallet.address);
+
+        // Since ethers.js returns BigNumber, you need to format it considering the token's decimals
+        // Use the formatUnits utility function to convert the balance to a human-readable format
+        const tokenBalance = formatUnits(balanceBN, decimals);
+
+        // Convert balanceBN from a BigNumber to a number, considering the decimals
+        // const tokenBalance = balanceBN.div(ethers.BigNumber.from(10).pow(decimals)).toNumber();
+        console.log("tokenBalance: ", tokenBalance);
+        setCryptoDisplay(tokenBalance);
+        let cashBalance = await AsyncStorage.getItem('cash');
+        console.log(cashBalance);
+        setCashDisplay(cashBalance);
+
+        //set rate
+        let rate
+        let TOTAL_CASH = Number(cashBalance);
+        let TOTAL_USDT = Number(tokenBalance);
+        if(TOTAL_CASH == 0 || TOTAL_USDT == 0){
+            rate = 1;
+        } else {
+            rate = (TOTAL_USDT / TOTAL_CASH);
+            setCurrentRate(rate.toFixed(2));
+        }
+        return (TOTAL_USDT, TOTAL_CASH, rate);
+    }
 
     return (
         <View style={styles.screen}>
@@ -262,13 +334,24 @@ export default function Home({ navigation, GlobalState }) {
                     style={styles.button}
                     onPress={() => goToLiquidityPage()}
                 >
-                    <Text style={styles.buttonText} >Generate Wallet</Text>
+                    <Text style={styles.buttonText} >Set Cash Reserve</Text>
                 </TouchableOpacity>
+                <Text style={styles.rateLabel}>Rate: {currentRate} USDT/USD</Text>
+                <View style={styles.container}>
+                    <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
+                        <Text style={styles.balanceLabel}>Crypto:</Text>
+                        <Text style={styles.balanceValue}>${cryptoDisplay}</Text>
+                    </View>
+                    <View style={[styles.balanceContainer, styles.balanceContainerWithMargin]}>
+                        <Text style={styles.balanceLabel}>Cash:</Text>
+                        <Text style={styles.balanceValue}>${cashDisplay}</Text>
+                    </View>
+                </View>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => goToLiquidityPage()}
+                    onPress={() => updateBalances()}
                 >
-                    <Text style={styles.buttonText} >Set Liquidity</Text>
+                    <Text style={styles.buttonText} >Update Balances</Text>
                 </TouchableOpacity>
             </View>
             <View style={styles.body}>
@@ -291,7 +374,8 @@ const styles = StyleSheet.create({
     body: {
         flex: 8,
         width: '100%',
-        backgroundColor: '#14141410'
+        backgroundColor: '#14141410',
+        alignItems: 'center'
     },
     task: {
         backgroundColor: 'white',
@@ -331,6 +415,31 @@ const styles = StyleSheet.create({
     },
     map: {
         width: '100%',
-        height: '80%',
+        height: '100%',
+    },
+    container: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    balanceContainer: {
+        alignItems: 'center',
+    },
+    balanceContainerWithMargin: {
+        marginHorizontal: 20,
+    },
+    balanceLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    rateLabel: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 5
+    },
+    balanceValue: {
+        fontSize: 16,
     }
 })

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Button, Modal, ScrollView, Image, FlatList } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -8,7 +8,7 @@ export default function Liquidity({ navigation, GlobalState }) {
 
     const { chosenTask } = GlobalState;
     const [cashCounts, setCashCounts] = useState({});
-
+    const [totalCash, setTotalCash] = useState(0);
     const renderBillImages = () => {
         return Object.entries(cashCounts).map(([amount, count]) => (
             <View key={amount} style={styles.billImageContainer}>
@@ -28,10 +28,18 @@ export default function Liquidity({ navigation, GlobalState }) {
     };
 
     const addCashAmount = (amount) => {
+        let currentCash = totalCash;
+        currentCash += amount;
+        setTotalCash(currentCash);
         setCashCounts((prevCounts) => ({
             ...prevCounts,
             [amount]: (prevCounts[amount] || 0) + 1,
         }));
+    };
+
+    const confirmTotal = (totalCash) => {
+        AsyncStorage.setItem('cash', totalCash.toString());
+        navigation.navigate('Home');
     };
 
     return (
@@ -51,14 +59,15 @@ export default function Liquidity({ navigation, GlobalState }) {
                                     </TouchableOpacity>
                                 ))}
                             </View>
+                            <Text style={styles.modalText}>{totalCash}</Text>
                             <TouchableOpacity style={styles.pickupButton} onPress={() => setCashCounts({})}>
                                 <Text style={styles.buttonText}>Reset</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.pickupButton} onPress={() => navigation.navigate('Home')}>
                                 <Text style={styles.buttonText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.pickupButton} onPress={() => navigation.navigate('Home')}>
-                                <Text style={styles.buttonText}>Set Liquidity</Text>
+                            <TouchableOpacity style={styles.pickupButton} onPress={() => confirmTotal(totalCash)}>
+                                <Text style={styles.buttonText}>Set Cash Reserve</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
