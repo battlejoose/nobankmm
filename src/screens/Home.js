@@ -142,10 +142,10 @@ export default function Home({ navigation, GlobalState}) {
 
             let GLOBAL_SESSION = new Date().getTime()
             //@SEAN MAKE THIS ADJUSTABLE
-            let TERMINAL_NAME = "JoosePhone"
+            let TERMINAL_NAME = "battleTest0"
             let config = {
                 queryKey:QUERY_KEY,
-                username:"app-mm-tester-battle",
+                username:"battleTest0",
                 wss:PIONEER_WS
             }
 
@@ -209,27 +209,28 @@ export default function Home({ navigation, GlobalState}) {
             //sub to events
             clientEvents.events.on('message', async (event) => {
                 try{
-                    log.info(tag,"event: ",event)
+                    let tag = "| client events |";
+                    console.log(tag,"event: ",event)
                     //is online
                     //TODO push location
 
                     //if match
                     if(event.payload && event.payload.type == "match"){
                         //handle match
-                        log.info(tag,"event: ",event)
+                        console.log(tag,"event: ",event)
                     }
 
 
                     //LP stuff
                     if(event.payload && (event.payload.type == "lpAdd" || event.payload.type == "lpAddAsym")){
-                        log.info(tag,"event: ",event)
+                        console.log(tag,"event: ",event)
                     }
                     if(event.payload && (event.payload.type == "lpWithdrawAsym" || event.payload.type == "lpWithdraw")){
-                        log.info(tag,"event: ",event)
+                        console.log(tag,"event: ",event)
                     }
 
                 }catch(e){
-                    log.error(e)
+                    console.error(e)
                 }
             })
 
