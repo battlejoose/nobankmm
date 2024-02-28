@@ -135,10 +135,10 @@ export default function Home({ navigation, GlobalState}) {
 
             let GLOBAL_SESSION = new Date().getTime()
             //@SEAN MAKE THIS ADJUSTABLE
-            let TERMINAL_NAME = "local-app-nobankmmJoose"
+            let TERMINAL_NAME = "JoosePhone"
             let config = {
                 queryKey:QUERY_KEY,
-                username:TERMINAL_NAME,
+                username:"terminal:"+wallet.address,
                 wss:PIONEER_WS
             }
 
@@ -148,22 +148,17 @@ export default function Home({ navigation, GlobalState}) {
             );
             console.log("statusLocal: ", statusLocal.data);
 
-            //sub ALL events
-            let clientEvents = new Events.Events(config)
-            clientEvents.init()
-            clientEvents.setUsername(config.username)
-
             //get terminal info
             let terminalInfo = await apiClient.get(spec+ "/bankless/terminal/private/"+TERMINAL_NAME);
             console.log("terminalInfo: ", terminalInfo.data);
 
-            if(!terminalInfo.data){
+            if(!terminalInfo.data.terminalInfo){
                 //register
                 let terminal = {
                     terminalId:TERMINAL_NAME+":"+wallet.address,
                     terminalName:TERMINAL_NAME,
                     tradePair: "USDT_USD",
-                    rate: rate,
+                    rate,
                     captable:[],
                     sessionId: GLOBAL_SESSION,
                     TOTAL_CASH:TOTAL_CASH.toString(),
@@ -198,31 +193,35 @@ export default function Home({ navigation, GlobalState}) {
                 console.log("respRegister: ",respRegister.data)
             }
 
-            //on events
+            //sub ALL events
+            let clientEvents = new Events.Events(config)
+            clientEvents.init()
+            clientEvents.setUsername(config.username)
+
             //sub to events
             clientEvents.events.on('message', async (event) => {
-                let tag = TAG + " | events | "
                 try{
-
+                    log.info(tag,"event: ",event)
                     //is online
                     //TODO push location
 
                     //if match
                     if(event.payload && event.payload.type == "match"){
                         //handle match
-                        console.log(tag,"event: ",event)
+                        log.info(tag,"event: ",event)
                     }
+
 
                     //LP stuff
                     if(event.payload && (event.payload.type == "lpAdd" || event.payload.type == "lpAddAsym")){
-                        console.log(tag,"event: ",event)
+                        log.info(tag,"event: ",event)
                     }
                     if(event.payload && (event.payload.type == "lpWithdrawAsym" || event.payload.type == "lpWithdraw")){
-                        console.log(tag,"event: ",event)
+                        log.info(tag,"event: ",event)
                     }
 
                 }catch(e){
-                    console.error(e)
+                    log.error(e)
                 }
             })
 
