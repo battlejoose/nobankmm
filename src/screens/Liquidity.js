@@ -27,7 +27,37 @@ export default function Liquidity({ navigation, GlobalState }) {
         100: require('../../assets/cash/100USD.png'),
     };
 
+    let inventory = {
+        "1": 0,
+        "5": 0,
+        "10": 0,
+        "20": 0,
+        "50": 0,
+        "100": 0
+    }
     const addCashAmount = (amount) => {
+
+        switch(amount){
+            case 1:
+                inventory["1"]+=1;
+                break;
+            case 5:
+                inventory["5"]+=1;
+                break;
+            case 10:
+                inventory["10"]+=1;
+                break;
+            case 20:
+                inventory["20"]+=1;
+                break;
+            case 50:
+                inventory["50"]+=1;
+                break;
+            case 100:
+                inventory["100"]+=1;
+                break;
+            default:
+        }
         let currentCash = totalCash;
         currentCash += amount;
         setTotalCash(currentCash);
@@ -39,6 +69,12 @@ export default function Liquidity({ navigation, GlobalState }) {
 
     const confirmTotal = (totalCash) => {
         AsyncStorage.setItem('cash', totalCash.toString());
+        AsyncStorage.setItem('1', inventory["1"].toString());
+        AsyncStorage.setItem('5', inventory["5"].toString());
+        AsyncStorage.setItem('10', inventory["10"].toString());
+        AsyncStorage.setItem('20', inventory["20"].toString());
+        AsyncStorage.setItem('50', inventory["50"].toString());
+        AsyncStorage.setItem('100', inventory["100"].toString());
         navigation.navigate('Home');
     };
 

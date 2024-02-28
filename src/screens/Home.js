@@ -140,12 +140,30 @@ export default function Home({ navigation, GlobalState}) {
             }
             console.log("rate: ", rate);
 
+            let inventory = {
+                "1": 0,
+                "5": 0,
+                "10": 0,
+                "20": 0,
+                "50": 0,
+                "100": 0
+            }
+
+            inventory["1"] = Number(await AsyncStorage.getItem('1'));
+            inventory["5"] = Number(await AsyncStorage.getItem('5'));
+            inventory["10"] = Number(await AsyncStorage.getItem('10'));
+            inventory["20"] = Number(await AsyncStorage.getItem('20'));
+            inventory["50"] = Number(await AsyncStorage.getItem('50'));
+            inventory["100"] = Number(await AsyncStorage.getItem('100'));
+
+            console.log("inventory: ", inventory);
+
             let GLOBAL_SESSION = new Date().getTime()
             //@SEAN MAKE THIS ADJUSTABLE
-            let TERMINAL_NAME = "battleTest0"
+            let TERMINAL_NAME = "battleTest1"
             let config = {
                 queryKey:QUERY_KEY,
-                username:"battleTest0",
+                username:"battleTest1",
                 wss:PIONEER_WS
             }
 
@@ -170,6 +188,7 @@ export default function Home({ navigation, GlobalState}) {
                     sessionId: GLOBAL_SESSION,
                     TOTAL_CASH:TOTAL_CASH.toString(),
                     TOTAL_DAI:TOTAL_DAI.toString(),
+                    inventory:inventory,
                     pubkey:wallet.address,
                     fact:"",
                     location:[location.coords.latitude, location.coords.longitude] //@SEAN get real location
