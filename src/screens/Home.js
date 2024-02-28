@@ -9,13 +9,8 @@ import * as ethers from 'ethers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Events from "@pioneer-platform/pioneer-events";
 import axios from "axios";
-let QUERY_KEY = 'tester-mm-mobileJoose'
-const apiClient = axios.create({
-    baseURL: spec, // Your base URL
-    headers: {
-        'Authorization':  QUERY_KEY// Replace 'YOUR_AUTH_TOKEN' with your actual token
-    }
-});
+import { v4 as uuidv4 } from 'uuid';
+
 // let spec = "https://cash2btc.com/spec/swagger.json"
 let spec = "https://cash2btc.com/api/v1"
 let PIONEER_WS = 'wss://cash2btc.com'
@@ -45,6 +40,18 @@ export default function Home({ navigation, GlobalState}) {
 
     let onStart = async function(){
         try{
+
+            let QUERY_KEY = await AsyncStorage.getItem('QUERY_KEY');
+            if(!QUERY_KEY){
+                QUERY_KEY = uuidv4()
+                AsyncStorage.setItem('QUERY_KEY');
+            }
+            const apiClient = axios.create({
+                baseURL: spec, // Your base URL
+                headers: {
+                    'Authorization':  QUERY_KEY// Replace 'YOUR_AUTH_TOKEN' with your actual token
+                }
+            });
             console.log("onStart")
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
@@ -138,7 +145,7 @@ export default function Home({ navigation, GlobalState}) {
             let TERMINAL_NAME = "JoosePhone"
             let config = {
                 queryKey:QUERY_KEY,
-                username:"terminal:"+wallet.address,
+                username:"app-mm-tester-battle",
                 wss:PIONEER_WS
             }
 
@@ -194,6 +201,7 @@ export default function Home({ navigation, GlobalState}) {
             }
 
             //sub ALL events
+            console.log("config: ",config)
             let clientEvents = new Events.Events(config)
             clientEvents.init()
             clientEvents.setUsername(config.username)
