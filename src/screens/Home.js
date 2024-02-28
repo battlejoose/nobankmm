@@ -9,7 +9,7 @@ import * as ethers from 'ethers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Events from "@pioneer-platform/pioneer-events";
 import axios from "axios";
-let QUERY_KEY = 'tester-mm-mobile2'
+let QUERY_KEY = 'tester-mm-mobileJoose'
 const apiClient = axios.create({
     baseURL: spec, // Your base URL
     headers: {
@@ -30,6 +30,7 @@ export default function Home({ navigation, GlobalState}) {
     const [cashDisplay, setCashDisplay] = useState('');
     const [cryptoDisplay, setCryptoDisplay] = useState('');
     const [currentRate, setCurrentRate] = useState(1);
+
 
     let getBalance = async function(){
         try{
@@ -118,20 +119,30 @@ export default function Home({ navigation, GlobalState}) {
 
             //cash balance
             let cashBalance = await AsyncStorage.getItem('cash');
-            console.log(cashBalance);
+            console.log("cashBalance: ", cashBalance);
             setCashDisplay(cashBalance);
 
-
+            let rate
+            let TOTAL_CASH = Number(cashBalance);
+            let TOTAL_DAI = Number(tokenBalance);
+            if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
+                rate = 1;
+            } else {
+                rate = (TOTAL_DAI / TOTAL_CASH);
+                setCurrentRate(rate.toFixed(2));
+            }
+            console.log("rate: ", rate);
 
             let GLOBAL_SESSION = new Date().getTime()
             //@SEAN MAKE THIS ADJUSTABLE
-            let TERMINAL_NAME = "local-app-nobankmm"
+            let TERMINAL_NAME = "local-app-nobankmmJoose"
             let config = {
                 queryKey:QUERY_KEY,
                 username:TERMINAL_NAME,
                 wss:PIONEER_WS
             }
 
+            //get server info
             const statusLocal = await axios.get(
                 spec+ "/bankless/info"
             );
@@ -143,33 +154,23 @@ export default function Home({ navigation, GlobalState}) {
             clientEvents.setUsername(config.username)
 
             //get terminal info
-            let terminalInfo = await apiClient.get(spec+ "/bankless/terminal/"+TERMINAL_NAME);
+            let terminalInfo = await apiClient.get(spec+ "/bankless/terminal/private/"+TERMINAL_NAME);
             console.log("terminalInfo: ", terminalInfo.data);
-
-            let rate
-            let TOTAL_CASH = Number(cashBalance);
-            let TOTAL_DAI = Number(tokenBalance);
-            if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
-                rate = 1;
-            } else {
-                rate = (TOTAL_DAI / TOTAL_CASH);
-                setCurrentRate(rate.toFixed(2));
-            }
 
             if(!terminalInfo.data){
                 //register
                 let terminal = {
                     terminalId:TERMINAL_NAME+":"+wallet.address,
                     terminalName:TERMINAL_NAME,
-                    tradePair: "USD_DAI",
-                    rate,
+                    tradePair: "USDT_USD",
+                    rate: rate,
                     captable:[],
                     sessionId: GLOBAL_SESSION,
                     TOTAL_CASH:TOTAL_CASH.toString(),
                     TOTAL_DAI:TOTAL_DAI.toString(),
                     pubkey:wallet.address,
                     fact:"",
-                    location:[ 4.5981, -74.0758 ] //@SEAN get real location
+                    location:[location.coords.latitude, location.coords.longitude] //@SEAN get real location
                 }
                 //clear session
                 console.log("REGISTERING TERMINAL: ",terminal)
@@ -188,7 +189,7 @@ export default function Home({ navigation, GlobalState}) {
                     TOTAL_CASH:TOTAL_CASH.toString(),
                     TOTAL_DAI:TOTAL_DAI.toString(),
                     captable:[],
-                    location:[ 4.5981, -74.0758 ]
+                    location:[location.coords.latitude, location.coords.longitude]
                 }
                 let respRegister = await apiClient.post(
                     spec+"/bankless/terminal/update",
@@ -315,13 +316,14 @@ export default function Home({ navigation, GlobalState}) {
         //set rate
         let rate
         let TOTAL_CASH = Number(cashBalance);
-        let TOTAL_DAI = Number(tokenBalance);
-        if(TOTAL_CASH == 0 || TOTAL_DAI == 0){
+        let TOTAL_USDT = Number(tokenBalance);
+        if(TOTAL_CASH == 0 || TOTAL_USDT == 0){
             rate = 1;
         } else {
-            rate = (TOTAL_DAI / TOTAL_CASH);
+            rate = (TOTAL_USDT / TOTAL_CASH);
             setCurrentRate(rate.toFixed(2));
         }
+        return (TOTAL_USDT, TOTAL_CASH, rate);
     }
 
     return (
