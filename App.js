@@ -7,6 +7,7 @@ import registerNNPushToken from 'native-notify';
 import Home from './src/screens/Home';
 import ChosenTask from './src/screens/ChosenTask';
 import Liquidity from "./src/screens/Liquidity";
+import SetLocationAddress from "./src/screens/SetLocationAddress";
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,10 @@ export default function App() {
 
           <Stack.Screen name="Liquidity" options={{ headerShown: false }}>
             {props => <Liquidity {...props} GlobalState={GlobalState} />}
+          </Stack.Screen>
+
+          <Stack.Screen name="SetLocationAddress" options={{ headerShown: false }}>
+            {props => <SetLocationAddress {...props} GlobalState={GlobalState} />}
           </Stack.Screen>
 
         </Stack.Navigator>
